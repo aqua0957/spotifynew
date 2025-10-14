@@ -3,6 +3,13 @@ import requests
 import subprocess
 from groq import Groq
 from dotenv import load_dotenv
+from langchain_groq import ChatGroq
+from langgraph.graph import StateGraph, START, END
+from langgraph.prebuilt import tools_condition, ToolNode
+from langgraph.graph import MessagesState
+import asyncio
+from mcp_use.client import MCPClient
+from mcp_use.adapters.langchain_adapter import LangChainAdapter
 
 load_dotenv()
 
@@ -205,6 +212,71 @@ def kill_processes_on_port(port):
     except Exception as e:
 
         print(f"Error killing processes on port {port}: {e}")
+
+async def create_graph():
+     #create client
+
+    client = MCPClient.from_config_file("mcp_config.json")
+
+    #create adapter instance
+
+    adapter = LangChainAdapter()
+
+    #load in tools from the MCP client
+
+    tools = await adapter.create_tools(client)
+
+    tools = [t for t in tools if t.name not in['getNowPlaying', 'getRecentlyPlayed', 'getQueue', 'playMusic', 'pausePlayback', 'skipToNext', 'skipToPrevious', 'resumePlayback', 'addToQueue', 'getMyPlaylists','getUsersSavedTracks', 'saveOrRemoveAlbum', 'checkUsersSavedAlbums']]
+
+    #define llm
+
+    llm = ChatGroq(model='meta-llama/llama-4-scout-17b-16e-instruct')
+
+    #bind tools
+
+    llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
+
+    system_msg = "You are a helpful assistant that has access to Spotify. You can create playlists, find songs, and provide music recommendations."
+
+    #define assistant
+
+    def assistant(state: MessagesState):
+
+        return {"messages": [llm_with_tools.invoke([system_msg] + state["messages"])]}
+
+       # Graph
+
+    builder = StateGraph(MessagesState)
+
+
+
+    # Define nodes: these do the work
+
+    builder.add_node("assistant", assistant)
+
+    builder.add_node("tools", ToolNode(tools))
+
+    # Define edges: these determine the control flow
+
+    builder.add_edge(START, "assistant")
+
+    builder.add_conditional_edges(
+
+        "assistant",
+
+        tools_condition,
+
+    )
+
+    builder.add_edge("tools", "assistant")
+
+    graph = builder.compile()
+
+    return graph
+
+
+
+
 def main():
 
         print("Checking API credentials...\n")
