@@ -1,5 +1,6 @@
 import os
 import requests
+import subprocess
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -134,6 +135,76 @@ def check_groq_credentials():
             print(f"❌ Error checking Groq credentials: {e}")
 
             return False
+        
+def kill_processes_on_port(port):
+
+    """Kill processes on Windows"""
+
+    try:
+
+        # Find processes using the port
+
+        result = subprocess.run(['netstat', '-ano'],
+
+                              capture_output=True, text=True, check=False)
+
+       
+
+        if result.returncode == 0:
+
+            lines = result.stdout.split('\n')
+
+            pids_to_kill = []
+
+           
+
+            for line in lines:
+
+                if f':{port}' in line and 'LISTENING' in line:
+
+                    parts = line.split()
+
+                    if len(parts) >= 5:
+
+                        pid = parts[-1]  # Last column is PID
+
+                        if pid.isdigit():
+
+                            pids_to_kill.append(pid)
+
+           
+
+            if pids_to_kill:
+
+                print(f"Found processes on port {port}: {pids_to_kill}")
+
+                for pid in pids_to_kill:
+
+                    try:
+
+                        subprocess.run(['taskkill', '/F', '/PID', pid],
+
+                                     check=True, capture_output=True)
+
+                        print(f"Killed process {pid} on port {port}")
+
+                    except subprocess.CalledProcessError as e:
+
+                        print(f"Failed to kill process {pid}: {e}")
+
+            else:
+
+                print(f"No processes found on port {port}")
+
+        else:
+
+            print(f"Failed to run netstat: {result.stderr}")
+
+           
+
+    except Exception as e:
+
+        print(f"Error killing processes on port {port}: {e}")
 def main():
 
         print("Checking API credentials...\n")
@@ -161,6 +232,8 @@ def main():
         else:
 
             print("\n⚠️  Please fix invalid credentials before proceeding.")
+
+        kill_processes_on_port(8090)
 if __name__ == "__main__":
 
         main()
