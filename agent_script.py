@@ -277,7 +277,7 @@ async def create_graph():
 
 
 
-def main():
+async def main():
 
         print("Checking API credentials...\n")
 
@@ -306,6 +306,15 @@ def main():
             print("\n⚠️  Please fix invalid credentials before proceeding.")
 
         kill_processes_on_port(8090)
+
+        agent = await create_graph()
+        
+        while True:
+
+            final_text = ""
+
+            message = input("User: ")
+
 if __name__ == "__main__":
 
         main()
