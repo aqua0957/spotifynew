@@ -7,3 +7,7 @@ venv/
 env/
 
 .env
+
+spotify-mcp-server/
+
+spotify-config.json
