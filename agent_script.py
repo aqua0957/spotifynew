@@ -236,7 +236,21 @@ async def create_graph():
 
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
-    system_msg = "You are a helpful assistant that has access to Spotify. You can create playlists, find songs, and provide music recommendations."
+    system_msg = """You are a helpful assistant that has access to Spotify. You can create playlists, find songs, and provide music recommendations.
+
+
+
+    When creating playlists:
+
+    - If the user does not specify playlist size, limit playlist lengths to only 10 songs
+
+    - Always provide helpful music recommendations based on user preferences and create well-curated playlists with appropriate descriptions
+
+    - When the User requests a playlist to be created, ensure that there are actually songs added to the playlist you create
+
+    - When outputting data values, preserve their original types: output integers as numbers without quotes (e.g., 42 not "42"), booleans as true/false without quotes (e.g., true not "true"), and only use quotes for actual string values.
+
+"""
 
     #define assistant
 
@@ -274,6 +288,12 @@ async def create_graph():
 
     return graph
 
+async def invoke_our_graph(agent, st_messages):
+
+    response = await agent.ainvoke({"messages": st_messages})
+
+    return response
+
 
 
 
@@ -281,13 +301,9 @@ async def main():
 
         print("Checking API credentials...\n")
 
-       
-
         spotify_valid = check_spotify_credentials()
 
         groq_valid = check_groq_credentials()
-
-       
 
         print(f"\nCredentials Summary:")
 
@@ -309,13 +325,17 @@ async def main():
 
         agent = await create_graph()
         
-        while True:
+        while True: 
 
             final_text = ""
 
             message = input("User: ")
 
-if __name__ == "__main__":
+            response = await agent.ainvoke({"messages": message})
+            for m in response["messages"]:
+                m.pretty_print()
 
-        main()
+if __name__ == "__main__":
+    # Run the main function in an event loop
+    asyncio.run(main())
 
