@@ -64,7 +64,7 @@ async def chat(query: ChatQuery):
 
     agent = app.state.agent
 
-    response = await invoke_our_graph(agent, query.input)
+    response = await invoke_our_graph(agent, query.message)
 
     if agent is None:
 
