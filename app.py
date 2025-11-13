@@ -24,11 +24,20 @@ import time
 
 import requests
 
+import random
+
 
 
 load_dotenv()  # Load environment variables from a .env file if present*
 
-st.title("🎵Spotify Agent🎵")
+titlenum = random.randint(1,9)
+
+if (1 <= titlenum <= 3):
+    st.title("What's on your playlist today? 👀")
+elif (4 <= titlenum <= 6):
+    st.title("It's a great day for music 😊")
+elif (7 <= titlenum <= 9):
+    st.title("Shall we get the party started? 🎵")
 
 if "messages" not in st.session_state:
 
