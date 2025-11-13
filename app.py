@@ -76,7 +76,7 @@ if prompt := st.chat_input():
 
         serialized_messages = [msg.dict() if hasattr(msg, 'dict') else msg for msg in st.session_state.messages]
 
-        output = requests.post("http://localhost:8000/chat", json={"input": serialized_messages})
+        output = requests.post("http://localhost:8000/chat", json={"message": prompt})
 
         output = output.json()
 

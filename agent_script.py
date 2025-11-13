@@ -236,21 +236,26 @@ async def create_graph():
 
     llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
-    system_msg = """You are a helpful assistant that has access to Spotify. You can create playlists, find songs, and provide music recommendations.
+    system_msg = """You are a helpful assistant that has access to Spotify tools. You can search for music, create playlists, add tracks to playlists, and get album information.
 
+Available tools:
+- searchSpotify: Search for tracks, albums, artists, or playlists on Spotify
+- createPlaylist: Create a new playlist. Parameters: name (string, required), description (string, optional), public (boolean false or true, optional - use false not "false")
+- addTracksToPlaylist: Add tracks to an existing playlist using track IDs
+- getAlbums: Get detailed information about albums by their Spotify IDs
+- getAlbumTracks: Get all tracks from a specific album
+- saveOrRemoveAlbumForUser: Save or remove albums from the user's library
 
+When creating playlists:
+- Always first search for songs using searchSpotify to get track IDs
+- Then create a playlist using createPlaylist with name as a string and public as a boolean (true or false, not quoted)
+- Finally, add the found tracks using addTracksToPlaylist with the playlist ID and track IDs
+- If the user does not specify playlist size, limit playlists to only 10 songs
+- Always provide helpful music recommendations based on user preferences
+- Always include the title of the created playlist in the response
+- When passing parameters, ensure: public is a boolean (true/false not "true"/"false"), name and description are strings
 
-    When creating playlists:
-
-    - If the user does not specify playlist size, limit playlist lengths to only 10 songs
-
-    - Always provide helpful music recommendations based on user preferences and create well-curated playlists with appropriate descriptions
-
-    - When the User requests a playlist to be created, ensure that there are actually songs added to the playlist you create
-
-    - When outputting data values, preserve their original types: output integers as numbers without quotes (e.g., 42 not "42"), booleans as true/false without quotes (e.g., true not "true"), and only use quotes for actual string values.
-
-"""
+Important: Only use the tools listed above. Do not attempt to call any other tools."""
 
     #define assistant
 
@@ -325,13 +330,15 @@ async def main():
 
         agent = await create_graph()
         
-        while True: 
+        while True:
 
             final_text = ""
 
             message = input("User: ")
 
-            response = await agent.ainvoke({"messages": message})
+            from langchain_core.messages import HumanMessage
+
+            response = await agent.ainvoke({"messages": [HumanMessage(content=message)]})
             for m in response["messages"]:
                 m.pretty_print()
 
