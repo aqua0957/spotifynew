@@ -278,6 +278,7 @@ If "Button press: Help" is recieved, list all the tools available. Use the descr
 When modifying the playback state or modifying the queue, always send an affirmative statement after excecuting the tool.
 If a user requests to start playback with out specifying a track, it can be assumed the user wants to resume playback.
 
+If an action is done successfully do not ask the user for further instructions.
 Important: Only use the tools listed above. Do not attempt to call any other tools."""
 
     #define assistant
