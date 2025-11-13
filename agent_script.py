@@ -226,7 +226,8 @@ async def create_graph():
 
     tools = await adapter.create_tools(client)
 
-    tools = [t for t in tools if t.name not in['getNowPlaying', 'getRecentlyPlayed', 'getQueue', 'playMusic', 'pausePlayback', 'skipToNext', 'skipToPrevious', 'resumePlayback', 'addToQueue', 'getMyPlaylists','getUsersSavedTracks', 'saveOrRemoveAlbum', 'checkUsersSavedAlbums']]
+    ## tools = [t for t in tools if t.name not in['getNowPlaying', 'getRecentlyPlayed', 'getQueue', 'playMusic', 'pausePlayback', 'skipToNext', 'skipToPrevious', 'resumePlayback', 'addToQueue', 'getMyPlaylists','getUsersSavedTracks', 'saveOrRemoveAlbum', 'checkUsersSavedAlbums']]
+    ## tools = [t for t in tools if t.name not in['playMusic', 'pausePlayback', 'skipToNext', 'skipToPrevious', 'resumePlayback', 'addToQueue']]
 
     #define llm
 
@@ -245,6 +246,19 @@ Available tools:
 - getAlbums: Get detailed information about albums by their Spotify IDs
 - getAlbumTracks: Get all tracks from a specific album
 - saveOrRemoveAlbumForUser: Save or remove albums from the user's library
+- getNowPlaying: Get information about the current playing track on Spotify
+- getMyPlaylists: Get a list of the current user's playlists on Spotify
+- getPlaylistTracks: Get a list of tracks in a specific Spotify playlist
+- getRecentlyPlayed: Retrieves a list of recently played tracks from Spotify.
+- getUsersSavedTracks: Get a list of tracks saved in the user's "Liked Songs" library
+
+- playMusic: Start playing a track, album, or playlist on Spotify
+- pausePlayback: Pause the currently playing track on Spotify
+- resumePlayback: Resume the current playing track on Spotify
+- skipToNext: Skip to the next track in the current playback queue
+- skipToPrevious: Skip to the previous track in the current playback queue
+- addToQueue: Adds a track, album, artist, or playlist to the current playback queue.
+
 
 When creating playlists:
 - Always first search for songs using searchSpotify to get track IDs
@@ -252,8 +266,17 @@ When creating playlists:
 - Finally, add the found tracks using addTracksToPlaylist with the playlist ID and track IDs
 - If the user does not specify playlist size, limit playlists to only 10 songs
 - Always provide helpful music recommendations based on user preferences
-- Always include the title of the created playlist in the response
 - When passing parameters, ensure: public is a boolean (true/false not "true"/"false"), name and description are strings
+
+If "Button press: Previous track" is recieved, play the previous track.
+If "Button press: Next track" is recieved, play the next track.
+If "Button press: Play/Pause" is recieved: act as follows:
+- If a track is currently playing, pause playback.
+- If a track is not currently playing, resume playback.
+If "Button press: Help" is recieved, list all the tools available. Use the descriptions as specified previously, however use natural language instead of the explicit tool names. Each tool should be listed on its own line, beginning with a '-' character.
+
+When modifying the playback state or modifying the queue, always send an affirmative statement after excecuting the tool.
+If a user requests to start playback with out specifying a track, it can be assumed the user wants to resume playback.
 
 Important: Only use the tools listed above. Do not attempt to call any other tools."""
 

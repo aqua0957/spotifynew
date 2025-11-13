@@ -34,38 +34,67 @@ if "messages" not in st.session_state:
 
     # default initial message to render in message state
 
-    st.session_state["messages"] = [AIMessage(content="How can I help you?")]
+    st.session_state["messages"] = [AIMessage(content="How can I help you? (Try: \"Add [song] to queue\" \"Make me a [mood] playlist'\)")]
 
-   
 
-   
+
+
 
 if "agent" not in st.session_state:
 
     st.session_state["agent"] = asyncio.run(create_graph())
 
-   
+
 
 agent = st.session_state["agent"]
 
-for msg in st.session_state.messages:
+def process_agent_response(prompt):
+    """Helper function to process agent response"""
+    st.session_state.messages.append(HumanMessage(content=prompt))
+    st.session_state["skip_display"] = len(st.session_state.messages) - 1
 
-   
+    with st.chat_message("assistant"):
+        output = requests.post("http://localhost:8000/chat", json={"message": prompt})
+        output = output.json()
+        text = output["response"]["messages"][-1]['content']
+        print(text)
 
-    if type(msg) == AIMessage:
+        placeholder = st.empty()
+        streamed_text = ""
 
-        st.chat_message("assistant").write(msg.content)
+        for token in text.split():
+            streamed_text += token + " "
+            placeholder.write(streamed_text)
+            time.sleep(0.07)
 
-    if type(msg) == HumanMessage:
+        st.session_state.messages.append(AIMessage(content=text))
 
-        st.chat_message("user").write(msg.content)
+left, middle, right = st.columns(3)
+if left.button("Previous", icon="◀️", width="stretch"):
+    process_agent_response("Button press: Previous track")
+if middle.button("Play/Pause", icon="⏯️", width="stretch"):
+    process_agent_response("Button press: Pause/Play")
+if right.button("Next", icon="▶️", width="stretch"):
+    process_agent_response("Button press: Next track")
+
+
+# Display chat messages (skip if we just processed a button)
+if "skip_display" not in st.session_state:
+    for msg in st.session_state.messages:
+        if type(msg) == AIMessage:
+            st.chat_message("assistant").write(msg.content)
+        if type(msg) == HumanMessage:
+            st.chat_message("user").write(msg.content)
+else:
+    st.session_state.pop("skip_display")
+
+# Add Help button to sidebar (stays fixed at bottom)
+if st.sidebar.button("Help", icon="❔", width="stretch"):
+    process_agent_response("Button press: Help")
 
 # takes new input in chat box from user and invokes the graph
-
 if prompt := st.chat_input():
-
     st.session_state.messages.append(HumanMessage(content=prompt))
-
     st.chat_message("user").write(prompt)
 
 
