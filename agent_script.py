@@ -1,15 +1,19 @@
-import os
-import requests
-import subprocess
-from groq import Groq
-from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import tools_condition, ToolNode
 from langgraph.graph import MessagesState
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+
 import asyncio
+import os
+import subprocess
+from dotenv import load_dotenv
 from mcp_use.client import MCPClient
-from mcp_use.adapters.langchain_adapter import LangChainAdapter
+from mcp_use.agents.adapters.langchain_adapter import LangChainAdapter
+from mcp_use import MCPAgent, MCPClient
+
+
 
 load_dotenv()
 
