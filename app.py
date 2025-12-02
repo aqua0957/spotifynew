@@ -80,11 +80,11 @@ def process_agent_response(prompt):
 
 left, middle, right = st.columns(3)
 if left.button("Previous", icon="◀️", width="stretch"):
-    process_agent_response("Button press: Previous track")
+    process_agent_response("◀️")
 if middle.button("Play/Pause", icon="⏯️", width="stretch"):
-    process_agent_response("Button press: Pause/Play")
+    process_agent_response("⏯️")
 if right.button("Next", icon="▶️", width="stretch"):
-    process_agent_response("Button press: Next track")
+    process_agent_response("▶️")
 
 
 # Display chat messages (skip if we just processed a button)

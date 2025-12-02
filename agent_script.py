@@ -5,9 +5,12 @@ from langgraph.graph import MessagesState
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 
+
 import asyncio
 import os
 import subprocess
+import requests
+from groq import Groq
 from dotenv import load_dotenv
 from mcp_use.client import MCPClient
 from mcp_use.agents.adapters.langchain_adapter import LangChainAdapter
@@ -216,7 +219,6 @@ def kill_processes_on_port(port):
     except Exception as e:
 
         print(f"Error killing processes on port {port}: {e}")
-
 async def create_graph():
      #create client
 
@@ -235,7 +237,7 @@ async def create_graph():
 
     #define llm
 
-    llm = ChatGroq(model='meta-llama/llama-4-scout-17b-16e-instruct')
+    llm = ChatGroq(model='openai/gpt-oss-20b')
 
     #bind tools
 
@@ -272,9 +274,9 @@ When creating playlists:
 - Always provide helpful music recommendations based on user preferences
 - When passing parameters, ensure: public is a boolean (true/false not "true"/"false"), name and description are strings
 
-If "Button press: Previous track" is recieved, play the previous track.
-If "Button press: Next track" is recieved, play the next track.
-If "Button press: Play/Pause" is recieved: act as follows:
+If "◀️" is recieved, play the previous track.
+If "▶️" is recieved, play the next track.
+If "⏯️" is recieved: act as follows:
 - If a track is currently playing, pause playback.
 - If a track is not currently playing, resume playback.
 If "Button press: Help" is recieved, list all the tools available. Use the descriptions as specified previously, however use natural language instead of the explicit tool names. Each tool should be listed on its own line, beginning with a '-' character.
@@ -283,7 +285,23 @@ When modifying the playback state or modifying the queue, always send an affirma
 If a user requests to start playback with out specifying a track, it can be assumed the user wants to resume playback.
 
 If an action is done successfully do not ask the user for further instructions.
-Important: Only use the tools listed above. Do not attempt to call any other tools."""
+Important: Only use the tools listed above. Do not attempt to call any other tools.
+
+deviceID is OPTIONAL. Do not consider deviceID when calling tools, and do not attempt to ask for deviceID or fill it in yourself. Always perform playback functions on the currently active session. Ask the user to try again if an active session is not found.
+
+CRITICAL - Parameter Type Requirements:
+
+    **NUMBERS MUST NEVER HAVE QUOTES**
+    When you need to pass a number parameter:
+    - CORRECT: limit: 10
+    - WRONG: limit: "10"
+
+    **BOOLEANS MUST NEVER HAVE QUOTES**
+    When you need to pass a boolean parameter:
+    - CORRECT: limit: true
+    - WRONG: limit: "true"
+    
+    """
 
     #define assistant
 
@@ -320,6 +338,12 @@ Important: Only use the tools listed above. Do not attempt to call any other too
     graph = builder.compile()
 
     return graph
+
+async def invoke_our_graph(agent, st_messages):
+
+    response = await agent.ainvoke({"messages": st_messages})
+
+    return response
 
 async def invoke_our_graph(agent, st_messages):
 
