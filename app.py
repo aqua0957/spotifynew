@@ -59,6 +59,7 @@ agent = st.session_state["agent"]
 
 def process_agent_response(prompt):
     """Helper function to process agent response"""
+    st.session_state.messages = []
     st.session_state.messages.append(HumanMessage(content=prompt))
     st.session_state["skip_display"] = len(st.session_state.messages) - 1
 
